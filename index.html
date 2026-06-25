@@ -3,92 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Backprop Canvas is an interactive visual portal for learning backpropagation, loss functions, optimizers, and image reconstruction." />
+  <meta name="description" content="Backprop Canvas: an interactive visual portal to understand backpropagation, loss, optimizers, latent space, and image reconstruction." />
+
   <title>Backprop Canvas</title>
 
-  <!--
-    IMPORTANT:
-    Replace YOUR-HF-SPACE-URL below with your actual Hugging Face Space direct URL.
-    Example format:
-    https://apoorvamehta-backprop-canvas.hf.space
-  -->
-  <link rel="dns-prefetch" href="https://huggingface.co/spaces/Apoorva2k/backprop-canvas" />
-  <link rel="preconnect" href="https://huggingface.co/spaces/Apoorva2k/backprop-canvas" crossorigin />
+  <!-- Hugging Face direct Space URL. This is the URL that can be embedded. -->
+  <link rel="dns-prefetch" href="https://apoorva2k-backprop-canvas.hf.space" />
+  <link rel="preconnect" href="https://apoorva2k-backprop-canvas.hf.space" crossorigin />
 
   <style>
     :root {
       --bg: #020617;
-      --card: rgba(15, 23, 42, 0.86);
+      --panel: #0f172a;
+      --panel-soft: #111827;
       --text: #f8fafc;
       --muted: #cbd5e1;
-      --soft: #94a3b8;
-      --primary: #38bdf8;
-      --primary-dark: #0284c7;
-      --border: rgba(148, 163, 184, 0.25);
+      --muted-2: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #a78bfa;
+      --border: #334155;
+      --success: #22c55e;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 36%),
-        radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.22), transparent 34%),
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(167, 139, 250, 0.15), transparent 35%),
         var(--bg);
       color: var(--text);
       min-height: 100vh;
     }
 
-    .page {
-      width: min(1120px, 92vw);
-      margin: 0 auto;
-      padding: 48px 0 64px;
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
     }
 
-    .hero {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 28px;
-      align-items: center;
-      min-height: 72vh;
+    .container {
+      width: 100%;
+      max-width: 1050px;
+      text-align: center;
     }
 
     .badge {
       display: inline-flex;
-      padding: 8px 12px;
-      border: 1px solid var(--border);
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: rgba(15, 23, 42, 0.72);
+      padding: 8px 13px;
       border-radius: 999px;
-      color: var(--muted);
-      background: rgba(15, 23, 42, 0.65);
+      color: #bae6fd;
       font-size: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 22px;
     }
 
     h1 {
-      margin: 0;
-      font-size: clamp(42px, 7vw, 82px);
-      line-height: 0.95;
-      letter-spacing: -3px;
+      font-size: clamp(42px, 7vw, 76px);
+      line-height: 1.02;
+      margin: 0 0 18px;
+      letter-spacing: -2px;
     }
 
-    .subtitle {
+    .gradient-text {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .lead {
+      max-width: 850px;
+      margin: 0 auto;
       color: var(--muted);
-      font-size: clamp(18px, 2.5vw, 23px);
-      line-height: 1.55;
-      margin: 24px 0 0;
-      max-width: 720px;
+      font-size: clamp(18px, 2.2vw, 23px);
+      line-height: 1.6;
     }
 
-    .actions {
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin: 34px auto 0;
+      max-width: 900px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: left;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    }
+
+    .card h3 {
+      margin: 0 0 9px;
+      font-size: 17px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted-2);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+
+    .button-row {
       margin-top: 34px;
       display: flex;
-      flex-wrap: wrap;
+      justify-content: center;
       gap: 14px;
-      align-items: center;
+      flex-wrap: wrap;
     }
 
-    button, .button {
+    button, .link-button {
       border: 0;
       border-radius: 12px;
       padding: 15px 22px;
@@ -96,66 +134,45 @@
       font-weight: 700;
       cursor: pointer;
       text-decoration: none;
-      transition: transform 0.15s ease, background 0.15s ease;
+      transition: transform 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
     }
 
-    button:hover, .button:hover { transform: translateY(-1px); }
+    button:hover, .link-button:hover {
+      transform: translateY(-1px);
+      opacity: 0.92;
+    }
 
     .primary {
-      background: var(--primary);
-      color: #001018;
+      background: var(--accent);
+      color: #020617;
     }
 
-    .primary:hover { background: #7dd3fc; }
-
     .secondary {
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.75);
       color: var(--text);
       border: 1px solid var(--border);
     }
 
-    .status {
+    #status {
       margin-top: 18px;
-      color: var(--soft);
+      color: var(--muted-2);
       font-size: 14px;
       min-height: 22px;
     }
 
-    .panel {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 24px;
-      box-shadow: 0 20px 80px rgba(0,0,0,0.28);
-    }
-
-    .mini-title {
-      margin: 0 0 16px;
-      color: var(--text);
-      font-size: 20px;
-    }
-
-    .feature {
-      border-top: 1px solid var(--border);
-      padding: 16px 0;
-    }
-
-    .feature:first-of-type { border-top: 0; }
-
-    .feature strong {
-      display: block;
-      font-size: 16px;
-      margin-bottom: 6px;
-    }
-
-    .feature span {
-      color: var(--muted);
-      line-height: 1.45;
-    }
-
-    #appShell {
+    .app-section {
       display: none;
-      margin-top: 28px;
+      padding: 0 20px 48px;
+    }
+
+    .app-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
     }
 
     .app-header {
@@ -163,23 +180,25 @@
       justify-content: space-between;
       gap: 16px;
       align-items: center;
-      margin-bottom: 12px;
-      color: var(--muted);
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(2, 6, 23, 0.55);
     }
 
-    .iframe-wrap {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      min-height: 840px;
+    .app-header strong {
+      font-size: 17px;
+    }
+
+    .app-header span {
+      color: var(--muted-2);
+      font-size: 14px;
     }
 
     #appFrame {
-      display: block;
       width: 100%;
-      height: 880px;
+      height: 920px;
       border: 0;
+      display: block;
       background: white;
     }
 
@@ -193,135 +212,151 @@
       pointer-events: none;
     }
 
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-top: 24px;
-    }
+    @media (max-width: 760px) {
+      .hero {
+        padding-top: 38px;
+      }
 
-    .step {
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-      background: rgba(15, 23, 42, 0.55);
-    }
+      .cards {
+        grid-template-columns: 1fr;
+      }
 
-    .step small {
-      color: var(--primary);
-      font-weight: 700;
-    }
+      .app-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
 
-    .step p {
-      color: var(--muted);
-      margin: 8px 0 0;
-      line-height: 1.45;
-    }
-
-    @media (max-width: 860px) {
-      .hero { grid-template-columns: 1fr; min-height: auto; }
-      .steps { grid-template-columns: 1fr 1fr; }
-      #appFrame { height: 780px; }
-    }
-
-    @media (max-width: 560px) {
-      .page { padding-top: 30px; }
-      h1 { letter-spacing: -2px; }
-      .steps { grid-template-columns: 1fr; }
-      button, .button { width: 100%; text-align: center; }
-      #appFrame { height: 760px; }
+      #appFrame {
+        height: 820px;
+      }
     }
   </style>
 </head>
+
 <body>
-  <main class="page">
-    <section class="hero">
-      <div>
-        <div class="badge">Interactive deep-learning education portal</div>
-        <h1>Backprop Canvas</h1>
-        <p class="subtitle">
-          Upload an image, tune model parameters, select optimizers and loss functions,
-          and watch backpropagation improve reconstruction step by step.
-        </p>
+  <main class="hero">
+    <section class="container">
+      <div class="badge">🧠 Interactive neural-network learning portal</div>
 
-        <div class="actions">
-          <button class="primary" id="launchButton" onclick="showEmbeddedApp()">
-            Launch Interactive Portal
-          </button>
-          <a class="button secondary" id="directLink" href="#" target="_blank" rel="noopener noreferrer">
-            Open in New Tab
-          </a>
+      <h1>
+        Backprop <span class="gradient-text">Canvas</span>
+      </h1>
+
+      <p class="lead">
+        Upload an image, tune the model, choose the optimizer and loss function,
+        and watch backpropagation improve reconstruction step by step.
+      </p>
+
+      <div class="cards">
+        <div class="card">
+          <h3>Visual backpropagation</h3>
+          <p>See the original image, reconstructed image, error map, loss curve, and gradient-descent ball together.</p>
         </div>
 
-        <div class="status" id="status">
-          Interact with this page and the app will start warming in the background.
+        <div class="card">
+          <h3>Adaptive learning coach</h3>
+          <p>The portal explains your current choices and suggests the next useful experiment.</p>
         </div>
 
-        <div class="steps">
-          <div class="step"><small>01</small><p>Visit landing page. It loads instantly from GitHub Pages.</p></div>
-          <div class="step"><small>02</small><p>User interaction starts warming the Hugging Face Space.</p></div>
-          <div class="step"><small>03</small><p>Launch button embeds the Streamlit portal on this page.</p></div>
-          <div class="step"><small>04</small><p>Fallback button opens the Space directly in a new tab.</p></div>
+        <div class="card">
+          <h3>Free interactive app</h3>
+          <p>The app runs on Hugging Face Spaces. This page warms it in the background before launch.</p>
         </div>
       </div>
 
-      <aside class="panel">
-        <h2 class="mini-title">What learners can explore</h2>
-        <div class="feature"><strong>Backpropagation visually</strong><span>See reconstruction, error heatmaps, gradient magnitude, and loss curves.</span></div>
-        <div class="feature"><strong>Optimizer comparison</strong><span>Compare SGD, Momentum, Adam, AdamW, and RMSprop.</span></div>
-        <div class="feature"><strong>Loss-function intuition</strong><span>Switch between Huber, MSE, MAE, and Smooth L1 loss.</span></div>
-        <div class="feature"><strong>Adaptive learning coach</strong><span>The portal explains current choices and suggests the next experiment.</span></div>
-      </aside>
-    </section>
+      <div class="button-row">
+        <button class="primary" onclick="showEmbeddedApp()">
+          Launch Interactive Portal
+        </button>
 
-    <section id="appShell">
-      <div class="app-header">
-        <strong>Interactive Portal</strong>
-        <span>If the free Space was sleeping, it may still need a few seconds to wake.</span>
+        <button class="secondary" onclick="openInNewTab()">
+          Open in New Tab
+        </button>
       </div>
-      <div class="iframe-wrap">
-        <iframe id="appFrame" src="about:blank" allow="clipboard-read; clipboard-write" title="Backprop Canvas App"></iframe>
+
+      <div id="status">
+        Interact with this page to start preparing the app in the background.
       </div>
     </section>
   </main>
 
-  <iframe id="warmupFrame" src="about:blank" title="Backprop Canvas warmup"></iframe>
+  <section id="appSection" class="app-section">
+    <div class="app-shell">
+      <div class="app-header">
+        <div>
+          <strong>Backprop Canvas Portal</strong><br />
+          <span>If the free Space was sleeping, first launch may take a few seconds.</span>
+        </div>
+
+        <button class="secondary" onclick="openInNewTab()">
+          Open full screen
+        </button>
+      </div>
+
+      <iframe
+        id="appFrame"
+        src="about:blank"
+        title="Backprop Canvas Hugging Face Space"
+        frameborder="0"
+        allow="clipboard-read; clipboard-write"
+      ></iframe>
+    </div>
+  </section>
+
+  <iframe
+    id="warmupFrame"
+    src="about:blank"
+    title="Backprop Canvas warmup frame"
+  ></iframe>
 
   <script>
-    // Replace this with your actual Hugging Face direct Space URL.
-    // Example: const SPACE_URL = "https://apoorvamehta-backprop-canvas.hf.space";
-    const SPACE_URL = "https://YOUR-HF-SPACE-URL.hf.space";
+    // Direct Hugging Face Space URL for embedding.
+    const SPACE_DIRECT_URL = "https://apoorva2k-backprop-canvas.hf.space";
 
-    const directLink = document.getElementById("directLink");
-    const statusBox = document.getElementById("status");
-    const warmupFrame = document.getElementById("warmupFrame");
-    const appFrame = document.getElementById("appFrame");
-    const appShell = document.getElementById("appShell");
-
-    directLink.href = SPACE_URL;
+    // Normal Hugging Face page URL as a backup/reference.
+    const SPACE_PAGE_URL = "https://huggingface.co/spaces/Apoorva2k/backprop-canvas";
 
     let warmed = false;
 
     function warmUpSpaceOnce() {
       if (warmed) return;
       warmed = true;
-      warmupFrame.src = SPACE_URL;
-      statusBox.textContent = "Preparing the interactive app in the background...";
+
+      const warmupFrame = document.getElementById("warmupFrame");
+      const status = document.getElementById("status");
+
+      warmupFrame.src = SPACE_DIRECT_URL;
+
+      if (status) {
+        status.innerText = "Preparing the interactive app in the background...";
+      }
     }
 
     function showEmbeddedApp() {
       warmUpSpaceOnce();
-      appFrame.src = SPACE_URL;
-      appShell.style.display = "block";
-      statusBox.textContent = "Portal launched below. Free hosting may still take a moment if the app was asleep.";
-      setTimeout(() => appShell.scrollIntoView({ behavior: "smooth", block: "start" }), 250);
+
+      const appSection = document.getElementById("appSection");
+      const appFrame = document.getElementById("appFrame");
+      const status = document.getElementById("status");
+
+      appFrame.src = SPACE_DIRECT_URL;
+      appSection.style.display = "block";
+
+      if (status) {
+        status.innerText = "Launching Backprop Canvas below. If the free Space was sleeping, it may still take a few seconds.";
+      }
+
+      appSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    // Start warming only after genuine visitor interaction.
+    function openInNewTab() {
+      window.open(SPACE_DIRECT_URL, "_blank", "noopener,noreferrer");
+    }
+
+    // Warm only after a real visitor interacts with the page.
     document.addEventListener("mousemove", warmUpSpaceOnce, { once: true });
     document.addEventListener("touchstart", warmUpSpaceOnce, { once: true });
     document.addEventListener("scroll", warmUpSpaceOnce, { once: true });
-    document.addEventListener("keydown", warmUpSpaceOnce, { once: true });
   </script>
 </body>
 </html>
