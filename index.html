@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Backprop Canvas is an interactive visual portal for learning backpropagation, loss functions, optimizers, and image reconstruction." />
+  <title>Backprop Canvas</title>
+
+  <!--
+    IMPORTANT:
+    Replace YOUR-HF-SPACE-URL below with your actual Hugging Face Space direct URL.
+    Example format:
+    https://apoorvamehta-backprop-canvas.hf.space
+  -->
+  <link rel="dns-prefetch" href="https://huggingface.co/spaces/Apoorva2k/backprop-canvas" />
+  <link rel="preconnect" href="https://huggingface.co/spaces/Apoorva2k/backprop-canvas" crossorigin />
+
+  <style>
+    :root {
+      --bg: #020617;
+      --card: rgba(15, 23, 42, 0.86);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --soft: #94a3b8;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --border: rgba(148, 163, 184, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 36%),
+        radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.22), transparent 34%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1120px, 92vw);
+      margin: 0 auto;
+      padding: 48px 0 64px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      align-items: center;
+      min-height: 72vh;
+    }
+
+    .badge {
+      display: inline-flex;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.65);
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(42px, 7vw, 82px);
+      line-height: 0.95;
+      letter-spacing: -3px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: clamp(18px, 2.5vw, 23px);
+      line-height: 1.55;
+      margin: 24px 0 0;
+      max-width: 720px;
+    }
+
+    .actions {
+      margin-top: 34px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    button, .button {
+      border: 0;
+      border-radius: 12px;
+      padding: 15px 22px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover, .button:hover { transform: translateY(-1px); }
+
+    .primary {
+      background: var(--primary);
+      color: #001018;
+    }
+
+    .primary:hover { background: #7dd3fc; }
+
+    .secondary {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .status {
+      margin-top: 18px;
+      color: var(--soft);
+      font-size: 14px;
+      min-height: 22px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.28);
+    }
+
+    .mini-title {
+      margin: 0 0 16px;
+      color: var(--text);
+      font-size: 20px;
+    }
+
+    .feature {
+      border-top: 1px solid var(--border);
+      padding: 16px 0;
+    }
+
+    .feature:first-of-type { border-top: 0; }
+
+    .feature strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .feature span {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    #appShell {
+      display: none;
+      margin-top: 28px;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 12px;
+      color: var(--muted);
+    }
+
+    .iframe-wrap {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      min-height: 840px;
+    }
+
+    #appFrame {
+      display: block;
+      width: 100%;
+      height: 880px;
+      border: 0;
+      background: white;
+    }
+
+    #warmupFrame {
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      pointer-events: none;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .step {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .step small {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .step p {
+      color: var(--muted);
+      margin: 8px 0 0;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      #appFrame { height: 780px; }
+    }
+
+    @media (max-width: 560px) {
+      .page { padding-top: 30px; }
+      h1 { letter-spacing: -2px; }
+      .steps { grid-template-columns: 1fr; }
+      button, .button { width: 100%; text-align: center; }
+      #appFrame { height: 760px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <div class="badge">Interactive deep-learning education portal</div>
+        <h1>Backprop Canvas</h1>
+        <p class="subtitle">
+          Upload an image, tune model parameters, select optimizers and loss functions,
+          and watch backpropagation improve reconstruction step by step.
+        </p>
+
+        <div class="actions">
+          <button class="primary" id="launchButton" onclick="showEmbeddedApp()">
+            Launch Interactive Portal
+          </button>
+          <a class="button secondary" id="directLink" href="#" target="_blank" rel="noopener noreferrer">
+            Open in New Tab
+          </a>
+        </div>
+
+        <div class="status" id="status">
+          Interact with this page and the app will start warming in the background.
+        </div>
+
+        <div class="steps">
+          <div class="step"><small>01</small><p>Visit landing page. It loads instantly from GitHub Pages.</p></div>
+          <div class="step"><small>02</small><p>User interaction starts warming the Hugging Face Space.</p></div>
+          <div class="step"><small>03</small><p>Launch button embeds the Streamlit portal on this page.</p></div>
+          <div class="step"><small>04</small><p>Fallback button opens the Space directly in a new tab.</p></div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <h2 class="mini-title">What learners can explore</h2>
+        <div class="feature"><strong>Backpropagation visually</strong><span>See reconstruction, error heatmaps, gradient magnitude, and loss curves.</span></div>
+        <div class="feature"><strong>Optimizer comparison</strong><span>Compare SGD, Momentum, Adam, AdamW, and RMSprop.</span></div>
+        <div class="feature"><strong>Loss-function intuition</strong><span>Switch between Huber, MSE, MAE, and Smooth L1 loss.</span></div>
+        <div class="feature"><strong>Adaptive learning coach</strong><span>The portal explains current choices and suggests the next experiment.</span></div>
+      </aside>
+    </section>
+
+    <section id="appShell">
+      <div class="app-header">
+        <strong>Interactive Portal</strong>
+        <span>If the free Space was sleeping, it may still need a few seconds to wake.</span>
+      </div>
+      <div class="iframe-wrap">
+        <iframe id="appFrame" src="about:blank" allow="clipboard-read; clipboard-write" title="Backprop Canvas App"></iframe>
+      </div>
+    </section>
+  </main>
+
+  <iframe id="warmupFrame" src="about:blank" title="Backprop Canvas warmup"></iframe>
+
+  <script>
+    // Replace this with your actual Hugging Face direct Space URL.
+    // Example: const SPACE_URL = "https://apoorvamehta-backprop-canvas.hf.space";
+    const SPACE_URL = "https://YOUR-HF-SPACE-URL.hf.space";
+
+    const directLink = document.getElementById("directLink");
+    const statusBox = document.getElementById("status");
+    const warmupFrame = document.getElementById("warmupFrame");
+    const appFrame = document.getElementById("appFrame");
+    const appShell = document.getElementById("appShell");
+
+    directLink.href = SPACE_URL;
+
+    let warmed = false;
+
+    function warmUpSpaceOnce() {
+      if (warmed) return;
+      warmed = true;
+      warmupFrame.src = SPACE_URL;
+      statusBox.textContent = "Preparing the interactive app in the background...";
+    }
+
+    function showEmbeddedApp() {
+      warmUpSpaceOnce();
+      appFrame.src = SPACE_URL;
+      appShell.style.display = "block";
+      statusBox.textContent = "Portal launched below. Free hosting may still take a moment if the app was asleep.";
+      setTimeout(() => appShell.scrollIntoView({ behavior: "smooth", block: "start" }), 250);
+    }
+
+    // Start warming only after genuine visitor interaction.
+    document.addEventListener("mousemove", warmUpSpaceOnce, { once: true });
+    document.addEventListener("touchstart", warmUpSpaceOnce, { once: true });
+    document.addEventListener("scroll", warmUpSpaceOnce, { once: true });
+    document.addEventListener("keydown", warmUpSpaceOnce, { once: true });
+  </script>
+</body>
+</html>
