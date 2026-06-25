@@ -3,206 +3,317 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Backprop Canvas: an interactive visual portal to understand backpropagation, loss, optimizers, latent space, and image reconstruction." />
+  <meta name="description" content="Backprop Canvas is an interactive portal for learning backpropagation through image reconstruction, loss curves, optimizers, and latent representations." />
+  <title>Backprop Canvas | Visual Backpropagation Portal</title>
 
-  <title>Backprop Canvas</title>
-
-  <!-- Hugging Face direct Space URL. This is the URL that can be embedded. -->
   <link rel="dns-prefetch" href="https://apoorva2k-backprop-canvas.hf.space" />
   <link rel="preconnect" href="https://apoorva2k-backprop-canvas.hf.space" crossorigin />
 
   <style>
     :root {
       --bg: #020617;
-      --panel: #0f172a;
-      --panel-soft: #111827;
+      --panel: rgba(15, 23, 42, 0.72);
+      --panel-strong: rgba(15, 23, 42, 0.94);
+      --line: rgba(148, 163, 184, 0.22);
       --text: #f8fafc;
       --muted: #cbd5e1;
-      --muted-2: #94a3b8;
-      --accent: #38bdf8;
-      --accent-2: #a78bfa;
-      --border: #334155;
-      --success: #22c55e;
+      --soft: #94a3b8;
+      --cyan: #38bdf8;
+      --violet: #a78bfa;
+      --green: #22c55e;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 35%),
-        radial-gradient(circle at bottom right, rgba(167, 139, 250, 0.15), transparent 35%),
+        radial-gradient(circle at 8% 8%, rgba(56, 189, 248, 0.20), transparent 28%),
+        radial-gradient(circle at 90% 12%, rgba(167, 139, 250, 0.20), transparent 30%),
+        radial-gradient(circle at 45% 88%, rgba(34, 197, 94, 0.10), transparent 25%),
         var(--bg);
       color: var(--text);
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    .hero {
-      min-height: 100vh;
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.24;
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.10) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image: linear-gradient(to bottom, black, transparent 80%);
+    }
+
+    .nav {
+      width: min(1160px, calc(100% - 32px));
+      margin: 20px auto 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 48px 20px;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
     }
 
-    .container {
-      width: 100%;
-      max-width: 1050px;
-      text-align: center;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
 
-    .badge {
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      box-shadow: 0 14px 40px rgba(56, 189, 248, 0.22);
+    }
+
+    .nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+
+    .hero {
+      width: min(1160px, calc(100% - 32px));
+      min-height: 78vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 46px;
+      align-items: center;
+      padding: 58px 0 36px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pill {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      background: rgba(15, 23, 42, 0.72);
-      padding: 8px 13px;
+      gap: 9px;
+      padding: 9px 13px;
       border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      background: rgba(2, 6, 23, 0.52);
       color: #bae6fd;
       font-size: 14px;
+      font-weight: 800;
       margin-bottom: 22px;
+      backdrop-filter: blur(10px);
     }
 
     h1 {
-      font-size: clamp(42px, 7vw, 76px);
-      line-height: 1.02;
-      margin: 0 0 18px;
-      letter-spacing: -2px;
+      margin: 0;
+      font-size: clamp(44px, 7vw, 86px);
+      line-height: 0.98;
+      letter-spacing: -0.065em;
     }
 
-    .gradient-text {
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    .gradient {
+      background: linear-gradient(92deg, #7dd3fc 0%, #c4b5fd 52%, #86efac 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
 
     .lead {
-      max-width: 850px;
-      margin: 0 auto;
+      margin: 24px 0 0;
+      font-size: clamp(18px, 2vw, 22px);
+      line-height: 1.62;
       color: var(--muted);
-      font-size: clamp(18px, 2.2vw, 23px);
-      line-height: 1.6;
+      max-width: 720px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin-top: 32px;
+    }
+
+    button, .button-link {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      text-decoration: none;
+      border-radius: 16px;
+      padding: 15px 20px;
+      font-size: 16px;
+      font-weight: 900;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+      white-space: nowrap;
+    }
+
+    button:hover, .button-link:hover { transform: translateY(-2px); }
+
+    .primary {
+      color: #020617;
+      background: linear-gradient(92deg, #38bdf8, #a78bfa);
+      box-shadow: 0 18px 44px rgba(56, 189, 248, 0.20);
+    }
+
+    .secondary {
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid var(--line);
+    }
+
+    .status {
+      margin-top: 18px;
+      color: var(--soft);
+      min-height: 26px;
+      font-size: 15px;
+    }
+
+    .visual-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.46));
+      box-shadow: var(--shadow);
+      border-radius: 30px;
+      padding: 22px;
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+    }
+
+    .canvas-demo {
+      border-radius: 22px;
+      background: #020617;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 18px;
+    }
+
+    .demo-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .pixel-box {
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background:
+        linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(167, 139, 250, 0.10)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0 8px, rgba(255,255,255,0.02) 8px 16px);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+      text-align: center;
+      font-size: 13px;
+      padding: 10px;
+    }
+
+    .curve {
+      height: 150px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.20);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(2, 6, 23, 0.78));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .curve svg { width: 100%; height: 100%; display: block; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(255,255,255,0.035);
+    }
+
+    .stat b { display: block; font-size: 20px; }
+    .stat span { color: var(--soft); font-size: 13px; }
+
+    .section {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 34px 0;
+      position: relative;
+      z-index: 1;
     }
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
-      margin: 34px auto 0;
-      max-width: 900px;
     }
 
     .card {
-      background: rgba(15, 23, 42, 0.78);
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      border-radius: 18px;
-      padding: 20px;
-      text-align: left;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 24px;
+      padding: 22px;
+      min-height: 190px;
+      backdrop-filter: blur(18px);
     }
 
-    .card h3 {
-      margin: 0 0 9px;
-      font-size: 17px;
-    }
-
-    .card p {
-      margin: 0;
-      color: var(--muted-2);
-      line-height: 1.55;
-      font-size: 15px;
-    }
-
-    .button-row {
-      margin-top: 34px;
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    button, .link-button {
-      border: 0;
-      border-radius: 12px;
-      padding: 15px 22px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
-    }
-
-    button:hover, .link-button:hover {
-      transform: translateY(-1px);
-      opacity: 0.92;
-    }
-
-    .primary {
-      background: var(--accent);
-      color: #020617;
-    }
-
-    .secondary {
-      background: rgba(15, 23, 42, 0.75);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    #status {
-      margin-top: 18px;
-      color: var(--muted-2);
-      font-size: 14px;
-      min-height: 22px;
-    }
+    .card h3 { margin: 0 0 10px; font-size: 21px; }
+    .card p { margin: 0; color: var(--muted); line-height: 1.55; }
 
     .app-section {
+      width: min(1280px, calc(100% - 22px));
+      margin: 0 auto 44px;
+      padding-top: 24px;
+      position: relative;
+      z-index: 1;
       display: none;
-      padding: 0 20px 48px;
     }
 
     .app-shell {
-      max-width: 1280px;
-      margin: 0 auto;
-      background: rgba(15, 23, 42, 0.72);
-      border: 1px solid rgba(148, 163, 184, 0.24);
-      border-radius: 22px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
       overflow: hidden;
-      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+      background: var(--panel-strong);
+      box-shadow: var(--shadow);
     }
 
-    .app-header {
+    .app-topbar {
       display: flex;
       justify-content: space-between;
-      gap: 16px;
       align-items: center;
-      padding: 18px 20px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.22);
-      background: rgba(2, 6, 23, 0.55);
+      gap: 12px;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      flex-wrap: wrap;
     }
 
-    .app-header strong {
-      font-size: 17px;
-    }
-
-    .app-header span {
-      color: var(--muted-2);
-      font-size: 14px;
-    }
-
-    #appFrame {
+    .app-frame {
       width: 100%;
-      height: 920px;
+      height: 1120px;
       border: 0;
       display: block;
       background: white;
     }
 
-    #warmupFrame {
+    .warmup-frame {
       width: 1px;
       height: 1px;
       opacity: 0;
@@ -212,151 +323,165 @@
       pointer-events: none;
     }
 
-    @media (max-width: 760px) {
-      .hero {
-        padding-top: 38px;
-      }
+    footer {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+      color: var(--soft);
+      padding: 34px 0 46px;
+      border-top: 1px solid var(--line);
+      position: relative;
+      z-index: 1;
+    }
 
-      .cards {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding-top: 42px; }
+      .cards, .stats { grid-template-columns: 1fr; }
+      .demo-row { grid-template-columns: 1fr 1fr 1fr; }
+      .nav-links { display: none; }
+      .app-frame { height: 980px; }
+    }
 
-      .app-header {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      #appFrame {
-        height: 820px;
-      }
+    @media (max-width: 560px) {
+      .actions { align-items: stretch; }
+      button, .button-link { width: 100%; }
+      .demo-row { grid-template-columns: 1fr; }
+      .app-frame { height: 900px; }
     }
   </style>
 </head>
 
 <body>
+  <div class="grid-bg"></div>
+
+  <nav class="nav">
+    <div class="brand"><div class="brand-icon">🧠</div><span>Backprop Canvas</span></div>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#launch">Launch</a>
+      <a href="https://huggingface.co/spaces/Apoorva2k/backprop-canvas" target="_blank" rel="noopener noreferrer">HF Space</a>
+    </div>
+  </nav>
+
   <main class="hero">
-    <section class="container">
-      <div class="badge">🧠 Interactive neural-network learning portal</div>
-
-      <h1>
-        Backprop <span class="gradient-text">Canvas</span>
-      </h1>
-
+    <section>
+      <div class="pill">● Free interactive ML learning portal</div>
+      <h1>Learn <span class="gradient">backpropagation</span> visually.</h1>
       <p class="lead">
-        Upload an image, tune the model, choose the optimizer and loss function,
-        and watch backpropagation improve reconstruction step by step.
+        Upload an image, tune a neural network, choose a loss function, switch optimizers, and watch reconstruction improve as gradients update the model.
       </p>
 
-      <div class="cards">
-        <div class="card">
-          <h3>Visual backpropagation</h3>
-          <p>See the original image, reconstructed image, error map, loss curve, and gradient-descent ball together.</p>
-        </div>
-
-        <div class="card">
-          <h3>Adaptive learning coach</h3>
-          <p>The portal explains your current choices and suggests the next useful experiment.</p>
-        </div>
-
-        <div class="card">
-          <h3>Free interactive app</h3>
-          <p>The app runs on Hugging Face Spaces. This page warms it in the background before launch.</p>
-        </div>
+      <div class="actions" id="launch">
+        <button class="primary" onclick="showEmbeddedApp()">Launch Interactive Portal</button>
+        <button class="secondary" onclick="openInNewTab()">Open in New Tab</button>
       </div>
-
-      <div class="button-row">
-        <button class="primary" onclick="showEmbeddedApp()">
-          Launch Interactive Portal
-        </button>
-
-        <button class="secondary" onclick="openInNewTab()">
-          Open in New Tab
-        </button>
-      </div>
-
-      <div id="status">
-        Interact with this page to start preparing the app in the background.
-      </div>
+      <div class="status" id="status">Interact with this page to start warming the app in the background.</div>
     </section>
+
+    <aside class="visual-card" aria-label="Backprop Canvas preview">
+      <div class="canvas-demo">
+        <div class="demo-row">
+          <div class="pixel-box">Original<br/>image</div>
+          <div class="pixel-box">Neural<br/>reconstruction</div>
+          <div class="pixel-box">Error<br/>heatmap</div>
+        </div>
+        <div class="curve">
+          <svg viewBox="0 0 500 150" role="img" aria-label="Loss curve preview">
+            <defs>
+              <linearGradient id="linegrad" x1="0" x2="1">
+                <stop offset="0%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#a78bfa" />
+              </linearGradient>
+            </defs>
+            <path d="M20 122 C80 105, 100 62, 155 78 C220 99, 246 41, 300 52 C360 62, 390 38, 480 26" fill="none" stroke="url(#linegrad)" stroke-width="5" stroke-linecap="round" />
+            <circle cx="480" cy="26" r="8" fill="#22c55e" />
+            <text x="26" y="30" fill="#cbd5e1" font-size="15" font-family="Arial">loss falls as learning improves</text>
+          </svg>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>Loss</b><span>watch error reduce</span></div>
+          <div class="stat"><b>z</b><span>latent memory</span></div>
+          <div class="stat"><b>∇</b><span>gradient update</span></div>
+        </div>
+      </div>
+    </aside>
   </main>
 
-  <section id="appSection" class="app-section">
+  <section class="section" id="how">
+    <div class="cards">
+      <article class="card">
+        <h3>1. Upload any image</h3>
+        <p>The app resizes it into a tiny training example so learners can see how reconstruction starts from random weights.</p>
+      </article>
+      <article class="card">
+        <h3>2. Tune the learning setup</h3>
+        <p>Choose optimizer, loss, latent size, image mode, and training steps. The coach explains only the current choices.</p>
+      </article>
+      <article class="card">
+        <h3>3. Watch backprop work</h3>
+        <p>Compare original, reconstruction, error heatmap, loss curve, gradient size, and the conceptual descent ball.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="app-section" id="appSection">
     <div class="app-shell">
-      <div class="app-header">
-        <div>
-          <strong>Backprop Canvas Portal</strong><br />
-          <span>If the free Space was sleeping, first launch may take a few seconds.</span>
-        </div>
-
-        <button class="secondary" onclick="openInNewTab()">
-          Open full screen
-        </button>
+      <div class="app-topbar">
+        <strong>Backprop Canvas Interactive Lab</strong>
+        <span id="appStatus">Loading the embedded Hugging Face Space...</span>
       </div>
-
       <iframe
         id="appFrame"
+        class="app-frame"
         src="about:blank"
-        title="Backprop Canvas Hugging Face Space"
-        frameborder="0"
+        title="Backprop Canvas App"
         allow="clipboard-read; clipboard-write"
       ></iframe>
     </div>
   </section>
 
-  <iframe
-    id="warmupFrame"
-    src="about:blank"
-    title="Backprop Canvas warmup frame"
-  ></iframe>
+  <iframe id="warmupFrame" class="warmup-frame" src="about:blank" title="Backprop Canvas warmup"></iframe>
+
+  <footer>
+    Built as a free educational experiment. If the app was sleeping, the first launch can still take a few seconds, but this landing page begins warming it as soon as you interact.
+  </footer>
 
   <script>
-    // Direct Hugging Face Space URL for embedding.
     const SPACE_DIRECT_URL = "https://apoorva2k-backprop-canvas.hf.space";
-
-    // Normal Hugging Face page URL as a backup/reference.
     const SPACE_PAGE_URL = "https://huggingface.co/spaces/Apoorva2k/backprop-canvas";
-
     let warmed = false;
 
     function warmUpSpaceOnce() {
       if (warmed) return;
       warmed = true;
-
       const warmupFrame = document.getElementById("warmupFrame");
       const status = document.getElementById("status");
-
       warmupFrame.src = SPACE_DIRECT_URL;
-
-      if (status) {
-        status.innerText = "Preparing the interactive app in the background...";
-      }
+      status.textContent = "Preparing the interactive app in the background...";
     }
 
     function showEmbeddedApp() {
       warmUpSpaceOnce();
-
       const appSection = document.getElementById("appSection");
       const appFrame = document.getElementById("appFrame");
       const status = document.getElementById("status");
+      const appStatus = document.getElementById("appStatus");
 
-      appFrame.src = SPACE_DIRECT_URL;
       appSection.style.display = "block";
-
-      if (status) {
-        status.innerText = "Launching Backprop Canvas below. If the free Space was sleeping, it may still take a few seconds.";
-      }
-
+      appFrame.src = SPACE_DIRECT_URL;
+      status.textContent = "Launching below. If free hosting was sleeping, give it a few seconds.";
+      appStatus.textContent = "If the app refuses to embed, use Open in New Tab.";
       appSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function openInNewTab() {
+      warmUpSpaceOnce();
       window.open(SPACE_DIRECT_URL, "_blank", "noopener,noreferrer");
     }
 
-    // Warm only after a real visitor interacts with the page.
     document.addEventListener("mousemove", warmUpSpaceOnce, { once: true });
     document.addEventListener("touchstart", warmUpSpaceOnce, { once: true });
     document.addEventListener("scroll", warmUpSpaceOnce, { once: true });
+    document.addEventListener("keydown", warmUpSpaceOnce, { once: true });
   </script>
 </body>
 </html>
